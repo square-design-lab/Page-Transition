@@ -1,0 +1,401 @@
+/* =========================================================
+   SDL Page Transition v1.0 — Styles
+   Square Design Lab — 16 GPU-accelerated transitions
+   ========================================================= */
+
+/* ─── Base Overlay ─── */
+.sdl-pt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  pointer-events: none;
+  --pt-dur: 600ms;
+  --pt-ease: cubic-bezier(0.65,0,0.35,1);
+  --pt-bg: #000;
+  --pt-cx: 50%;
+  --pt-cy: 50%;
+}
+.sdl-pt-overlay.sdl-pt-covering,
+.sdl-pt-overlay.sdl-pt-covered,
+.sdl-pt-overlay.sdl-pt-revealing {
+  pointer-events: all;
+}
+
+/* ─── Shared Panel ─── */
+.sdl-pt-panel,
+.sdl-pt-half,
+.sdl-pt-bar,
+.sdl-pt-slat,
+.sdl-pt-cell {
+  position: absolute;
+  background: var(--pt-bg);
+  will-change: transform, opacity, clip-path;
+}
+.sdl-pt-panel { inset: 0; }
+
+/* ─── Logo ─── */
+.sdl-pt-logo {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: none;
+}
+.sdl-pt-covering .sdl-pt-logo {
+  animation: ptLogoIn calc(var(--pt-dur) * 0.6) var(--pt-ease) forwards;
+  animation-delay: calc(var(--pt-dur) * 0.4);
+}
+.sdl-pt-covered .sdl-pt-logo { opacity: 1; }
+.sdl-pt-revealing .sdl-pt-logo {
+  animation: ptLogoOut calc(var(--pt-dur) * 0.4) var(--pt-ease) forwards;
+}
+@keyframes ptLogoIn  { from { opacity: 0; transform: translate(-50%,-50%) scale(0.85); }
+                         to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes ptLogoOut { from { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+                         to { opacity: 0; transform: translate(-50%,-50%) scale(1.08); } }
+
+/* =========================================================
+   1. FADE
+   ========================================================= */
+.sdl-pt-fade .sdl-pt-panel { opacity: 0; }
+.sdl-pt-fade.sdl-pt-covering .sdl-pt-panel {
+  animation: ptFadeIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-fade.sdl-pt-covered .sdl-pt-panel { opacity: 1; }
+.sdl-pt-fade.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptFadeOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptFadeIn  { to { opacity: 1; } }
+@keyframes ptFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* =========================================================
+   2. SLIDE UP
+   ========================================================= */
+.sdl-pt-slideUp .sdl-pt-panel { transform: translateY(100%); }
+.sdl-pt-slideUp.sdl-pt-covering .sdl-pt-panel {
+  animation: ptSlideUpIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-slideUp.sdl-pt-covered .sdl-pt-panel { transform: translateY(0); }
+.sdl-pt-slideUp.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptSlideUpOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptSlideUpIn  { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes ptSlideUpOut { from { transform: translateY(0); }   to { transform: translateY(-100%); } }
+
+/* =========================================================
+   3. SLIDE DOWN
+   ========================================================= */
+.sdl-pt-slideDown .sdl-pt-panel { transform: translateY(-100%); }
+.sdl-pt-slideDown.sdl-pt-covering .sdl-pt-panel {
+  animation: ptSlideDnIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-slideDown.sdl-pt-covered .sdl-pt-panel { transform: translateY(0); }
+.sdl-pt-slideDown.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptSlideDnOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptSlideDnIn  { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+@keyframes ptSlideDnOut { from { transform: translateY(0); }    to { transform: translateY(100%); } }
+
+/* =========================================================
+   4. SLIDE LEFT
+   ========================================================= */
+.sdl-pt-slideLeft .sdl-pt-panel { transform: translateX(100%); }
+.sdl-pt-slideLeft.sdl-pt-covering .sdl-pt-panel {
+  animation: ptSlideLIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-slideLeft.sdl-pt-covered .sdl-pt-panel { transform: translateX(0); }
+.sdl-pt-slideLeft.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptSlideLOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptSlideLIn  { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes ptSlideLOut { from { transform: translateX(0); }   to { transform: translateX(-100%); } }
+
+/* =========================================================
+   5. SLIDE RIGHT
+   ========================================================= */
+.sdl-pt-slideRight .sdl-pt-panel { transform: translateX(-100%); }
+.sdl-pt-slideRight.sdl-pt-covering .sdl-pt-panel {
+  animation: ptSlideRIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-slideRight.sdl-pt-covered .sdl-pt-panel { transform: translateX(0); }
+.sdl-pt-slideRight.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptSlideROut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptSlideRIn  { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes ptSlideROut { from { transform: translateX(0); }    to { transform: translateX(100%); } }
+
+/* =========================================================
+   6. CURTAIN (wipe from left, exit right)
+   ========================================================= */
+.sdl-pt-curtain .sdl-pt-panel {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.sdl-pt-curtain.sdl-pt-covering .sdl-pt-panel {
+  animation: ptCurtainIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-curtain.sdl-pt-covered .sdl-pt-panel {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+.sdl-pt-curtain.sdl-pt-revealing .sdl-pt-panel {
+  transform-origin: right center;
+  animation: ptCurtainOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptCurtainIn  { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ptCurtainOut { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* =========================================================
+   7. SPLIT HORIZONTAL (left + right panels)
+   ========================================================= */
+.sdl-pt-splitH .sdl-pt-half { top: 0; bottom: 0; width: 50%; }
+.sdl-pt-splitH .sdl-pt-left  { left: 0;  transform: translateX(-100%); }
+.sdl-pt-splitH .sdl-pt-right { right: 0; transform: translateX(100%); }
+
+.sdl-pt-splitH.sdl-pt-covering .sdl-pt-left {
+  animation: ptSplitHLIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-splitH.sdl-pt-covering .sdl-pt-right {
+  animation: ptSplitHRIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-splitH.sdl-pt-covered .sdl-pt-left  { transform: translateX(0); }
+.sdl-pt-splitH.sdl-pt-covered .sdl-pt-right { transform: translateX(0); }
+.sdl-pt-splitH.sdl-pt-revealing .sdl-pt-left {
+  animation: ptSplitHLOut var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-splitH.sdl-pt-revealing .sdl-pt-right {
+  animation: ptSplitHROut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptSplitHLIn  { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes ptSplitHRIn  { from { transform: translateX(100%); }  to { transform: translateX(0); } }
+@keyframes ptSplitHLOut { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes ptSplitHROut { from { transform: translateX(0); } to { transform: translateX(100%); } }
+
+/* =========================================================
+   8. SPLIT VERTICAL (top + bottom panels)
+   ========================================================= */
+.sdl-pt-splitV .sdl-pt-half { left: 0; right: 0; height: 50%; }
+.sdl-pt-splitV .sdl-pt-top    { top: 0;    transform: translateY(-100%); }
+.sdl-pt-splitV .sdl-pt-bottom { bottom: 0; transform: translateY(100%); }
+
+.sdl-pt-splitV.sdl-pt-covering .sdl-pt-top {
+  animation: ptSplitVTIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-splitV.sdl-pt-covering .sdl-pt-bottom {
+  animation: ptSplitVBIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-splitV.sdl-pt-covered .sdl-pt-top    { transform: translateY(0); }
+.sdl-pt-splitV.sdl-pt-covered .sdl-pt-bottom { transform: translateY(0); }
+.sdl-pt-splitV.sdl-pt-revealing .sdl-pt-top {
+  animation: ptSplitVTOut var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-splitV.sdl-pt-revealing .sdl-pt-bottom {
+  animation: ptSplitVBOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptSplitVTIn  { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+@keyframes ptSplitVBIn  { from { transform: translateY(100%); }  to { transform: translateY(0); } }
+@keyframes ptSplitVTOut { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+@keyframes ptSplitVBOut { from { transform: translateY(0); } to { transform: translateY(100%); } }
+
+/* =========================================================
+   9. DIAGONAL WIPE
+   ========================================================= */
+.sdl-pt-diagonal .sdl-pt-panel {
+  clip-path: polygon(0 0, 0 0, -30% 100%, -30% 100%);
+}
+.sdl-pt-diagonal.sdl-pt-covering .sdl-pt-panel {
+  animation: ptDiagIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-diagonal.sdl-pt-covered .sdl-pt-panel {
+  clip-path: polygon(0 0, 130% 0, 100% 100%, -30% 100%);
+}
+.sdl-pt-diagonal.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptDiagOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptDiagIn {
+  from { clip-path: polygon(0 0, 0 0, -30% 100%, -30% 100%); }
+  to   { clip-path: polygon(0 0, 130% 0, 100% 100%, -30% 100%); }
+}
+@keyframes ptDiagOut {
+  from { clip-path: polygon(0 0, 130% 0, 100% 100%, -30% 100%); }
+  to   { clip-path: polygon(130% 0, 130% 0, 100% 100%, 100% 100%); }
+}
+
+/* =========================================================
+   10. CIRCLE REVEAL
+   ========================================================= */
+.sdl-pt-circle .sdl-pt-panel {
+  clip-path: circle(0% at var(--pt-cx) var(--pt-cy));
+}
+.sdl-pt-circle.sdl-pt-covering .sdl-pt-panel {
+  animation: ptCircleIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-circle.sdl-pt-covered .sdl-pt-panel {
+  clip-path: circle(150% at var(--pt-cx) var(--pt-cy));
+}
+.sdl-pt-circle.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptCircleOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptCircleIn {
+  from { clip-path: circle(0% at var(--pt-cx) var(--pt-cy)); }
+  to   { clip-path: circle(150% at var(--pt-cx) var(--pt-cy)); }
+}
+@keyframes ptCircleOut {
+  from { clip-path: circle(150% at var(--pt-cx) var(--pt-cy)); }
+  to   { clip-path: circle(0% at var(--pt-cx) var(--pt-cy)); }
+}
+
+/* =========================================================
+   11. GRID REVEAL
+   ========================================================= */
+.sdl-pt-grid .sdl-pt-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  grid-template-rows: repeat(var(--rows), 1fr);
+}
+.sdl-pt-grid .sdl-pt-cell {
+  position: relative;
+  transform: scale(0);
+}
+.sdl-pt-grid.sdl-pt-covering .sdl-pt-cell {
+  animation: ptGridIn var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+.sdl-pt-grid.sdl-pt-covered .sdl-pt-cell { transform: scale(1); }
+.sdl-pt-grid.sdl-pt-revealing .sdl-pt-cell {
+  animation: ptGridOut var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+@keyframes ptGridIn  { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes ptGridOut { from { transform: scale(1); } to { transform: scale(0); } }
+
+/* =========================================================
+   12. ZOOM OUT
+   ========================================================= */
+.sdl-pt-zoom .sdl-pt-panel { opacity: 0; }
+.sdl-pt-zoom.sdl-pt-covering .sdl-pt-panel {
+  animation: ptFadeIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-zoom.sdl-pt-covered .sdl-pt-panel { opacity: 1; }
+.sdl-pt-zoom.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptFadeOut var(--pt-dur) var(--pt-ease) forwards;
+}
+
+/* =========================================================
+   13. OVERLAY STACK
+   ========================================================= */
+.sdl-pt-stack .sdl-pt-bar {
+  top: 0; bottom: 0;
+  width: calc(100% / var(--bars) + 1px);
+  left: calc((100% / var(--bars)) * var(--i));
+  transform: translateY(100%);
+}
+.sdl-pt-stack.sdl-pt-covering .sdl-pt-bar {
+  animation: ptStackIn var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+.sdl-pt-stack.sdl-pt-covered .sdl-pt-bar { transform: translateY(0); }
+.sdl-pt-stack.sdl-pt-revealing .sdl-pt-bar {
+  animation: ptStackOut var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+@keyframes ptStackIn  { from { transform: translateY(100%); }  to { transform: translateY(0); } }
+@keyframes ptStackOut { from { transform: translateY(0); }     to { transform: translateY(-100%); } }
+
+/* =========================================================
+   14. BLINDS
+   ========================================================= */
+.sdl-pt-blinds {
+  perspective: 1000px;
+}
+.sdl-pt-blinds .sdl-pt-slat {
+  top: 0; bottom: 0;
+  width: calc(100% / var(--bars) + 1px);
+  left: calc((100% / var(--bars)) * var(--i));
+  transform: rotateY(90deg);
+  transform-origin: left center;
+  backface-visibility: hidden;
+}
+.sdl-pt-blinds.sdl-pt-covering .sdl-pt-slat {
+  animation: ptBlindsIn var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+.sdl-pt-blinds.sdl-pt-covered .sdl-pt-slat { transform: rotateY(0deg); }
+.sdl-pt-blinds.sdl-pt-revealing .sdl-pt-slat {
+  animation: ptBlindsOut var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+@keyframes ptBlindsIn  { from { transform: rotateY(90deg); } to { transform: rotateY(0deg); } }
+@keyframes ptBlindsOut { from { transform: rotateY(0deg); }  to { transform: rotateY(-90deg); } }
+
+/* =========================================================
+   15. PAGE FLIP
+   ========================================================= */
+.sdl-pt-flip {
+  perspective: 1200px;
+}
+.sdl-pt-flip .sdl-pt-panel {
+  transform: rotateY(-90deg);
+  transform-origin: right center;
+  backface-visibility: hidden;
+}
+.sdl-pt-flip.sdl-pt-covering .sdl-pt-panel {
+  animation: ptFlipIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-flip.sdl-pt-covered .sdl-pt-panel {
+  transform: rotateY(0deg);
+}
+.sdl-pt-flip.sdl-pt-revealing .sdl-pt-panel {
+  transform-origin: left center;
+  animation: ptFlipOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptFlipIn  { from { transform: rotateY(-90deg); } to { transform: rotateY(0deg); } }
+@keyframes ptFlipOut { from { transform: rotateY(0deg); }   to { transform: rotateY(90deg); } }
+
+/* =========================================================
+   16. NOISE / GRAIN DISSOLVE
+   ========================================================= */
+.sdl-pt-noise .sdl-pt-panel { opacity: 0; }
+.sdl-pt-noise .sdl-pt-panel::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  animation: ptNoiseShift 0.15s steps(3) infinite;
+}
+.sdl-pt-noise.sdl-pt-covering .sdl-pt-panel {
+  animation: ptNoiseCover var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-noise.sdl-pt-covered .sdl-pt-panel { opacity: 1; }
+.sdl-pt-noise.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptNoiseReveal var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptNoiseCover {
+  0%   { opacity: 0; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes ptNoiseReveal {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.1); }
+}
+@keyframes ptNoiseShift {
+  0%   { transform: translate(0, 0); }
+  33%  { transform: translate(-5%, -5%); }
+  66%  { transform: translate(3%, -3%); }
+  100% { transform: translate(-3%, 5%); }
+}
+
+.sdl-pt-noise-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}

@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDL Page Transition — Config Generator</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+
+/* ─── Layout ─── */
+.app { display: grid; grid-template-columns: 380px 1fr; grid-template-rows: auto 1fr auto; height: 100vh; }
+.header { grid-column: 1 / -1; padding: 20px 28px; border-bottom: 1px solid #1e1e1e; display: flex; align-items: center; gap: 16px; }
+.header h1 { font-size: 18px; font-weight: 600; color: #fff; }
+.header .badge { font-size: 11px; background: #2a2a2a; color: #888; padding: 3px 10px; border-radius: 20px; }
+.sidebar { grid-column: 1; overflow-y: auto; padding: 24px; border-right: 1px solid #1e1e1e; }
+.preview-area { grid-column: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; position: relative; background: #111; }
+.code-area { grid-column: 1 / -1; border-top: 1px solid #1e1e1e; }
+
+/* ─── Sidebar Controls ─── */
+.section { margin-bottom: 28px; }
+.section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #666; margin-bottom: 14px; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; color: #aaa; margin-bottom: 6px; }
+.field select, .field input[type="text"], .field input[type="number"], .field input[type="url"] {
+  width: 100%; padding: 8px 12px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px;
+  color: #e0e0e0; font-size: 13px; outline: none; transition: border-color 0.2s;
+}
+.field select:focus, .field input:focus { border-color: #555; }
+.field select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%23666' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+.field .range-wrap { display: flex; align-items: center; gap: 12px; }
+.field input[type="range"] { flex: 1; accent-color: #fff; }
+.field .range-val { font-size: 12px; color: #888; min-width: 46px; text-align: right; font-variant-numeric: tabular-nums; }
+.field .color-wrap { display: flex; gap: 8px; align-items: center; }
+.field input[type="color"] { width: 36px; height: 36px; border: 1px solid #2a2a2a; border-radius: 6px; background: none; cursor: pointer; padding: 2px; }
+.field .color-hex { flex: 1; }
+
+/* ─── Transition Type Grid ─── */
+.type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.type-btn {
+  padding: 10px 8px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+  color: #aaa; font-size: 11px; text-align: center; cursor: pointer; transition: all 0.2s;
+}
+.type-btn:hover { border-color: #444; color: #fff; }
+.type-btn.active { border-color: #fff; color: #fff; background: #222; }
+.type-btn .type-icon { font-size: 18px; margin-bottom: 4px; display: block; }
+
+/* ─── Preview ─── */
+.preview-frame {
+  width: 560px; height: 380px; background: #1a1a1a; border-radius: 12px; overflow: hidden;
+  position: relative; border: 1px solid #2a2a2a; cursor: pointer;
+}
+.preview-page {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; padding: 40px; transition: transform 0.5s ease;
+}
+.preview-page.page-a { background: linear-gradient(135deg, #1a1a2e, #16213e); }
+.preview-page.page-b { background: linear-gradient(135deg, #0f3460, #533483); }
+.preview-page h2 { font-size: 20px; color: #fff; font-weight: 600; }
+.preview-page p { font-size: 13px; color: #888; max-width: 300px; text-align: center; line-height: 1.5; }
+.preview-nav { display: flex; gap: 20px; margin-top: 8px; }
+.preview-nav span { width: 40px; height: 4px; border-radius: 2px; background: #333; }
+.preview-hint {
+  position: absolute; bottom: 16px; left: 0; right: 0; text-align: center;
+  font-size: 12px; color: #555; pointer-events: none;
+}
+
+/* Preview overlay mirrors the real plugin */
+.pv-overlay {
+  position: absolute; inset: 0; z-index: 10; pointer-events: none;
+}
+
+/* ─── Code Output ─── */
+.code-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; }
+.code-header h3 { font-size: 13px; font-weight: 600; color: #aaa; }
+.copy-btn {
+  padding: 6px 16px; background: #222; border: 1px solid #333; border-radius: 6px;
+  color: #ccc; font-size: 12px; cursor: pointer; transition: all 0.2s;
+}
+.copy-btn:hover { background: #333; color: #fff; }
+.copy-btn.copied { background: #1a3a1a; border-color: #2a5a2a; color: #6f6; }
+.code-block {
+  padding: 0 28px 20px; overflow-x: auto;
+}
+.code-block pre {
+  background: #0d0d0d; padding: 20px; border-radius: 8px; font-size: 12.5px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; line-height: 1.6;
+  color: #b0b0b0; white-space: pre-wrap; word-break: break-all; border: 1px solid #1a1a1a;
+}
+.code-block .c-key { color: #7ec8e3; }
+.code-block .c-str { color: #a8d8a8; }
+.code-block .c-num { color: #f0b878; }
+.code-block .c-cmt { color: #555; }
+.code-block .c-tag { color: #e8a0bf; }
+
+/* ─── Conditional fields ─── */
+.field.hidden { display: none; }
+
+/* ─── Preview transition elements ─── */
+.pv-panel, .pv-half, .pv-bar, .pv-slat, .pv-cell {
+  position: absolute; will-change: transform, opacity, clip-path;
+}
+.pv-panel { inset: 0; }
+.pv-logo {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  z-index: 2; pointer-events: none; object-fit: contain;
+}
+.pv-grid {
+  position: absolute; inset: 0; display: grid;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>SDL Page Transition</h1>
+    <span class="badge">v1.0</span>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <!-- Transition Type -->
+    <div class="section">
+      <div class="section-title">Transition Type</div>
+      <div class="type-grid" id="typeGrid">
+        <div class="type-btn active" data-type="fade"><span class="type-icon">&#9679;</span>Fade</div>
+        <div class="type-btn" data-type="slideUp"><span class="type-icon">&uarr;</span>Slide Up</div>
+        <div class="type-btn" data-type="slideDown"><span class="type-icon">&darr;</span>Slide Down</div>
+        <div class="type-btn" data-type="slideLeft"><span class="type-icon">&larr;</span>Slide Left</div>
+        <div class="type-btn" data-type="slideRight"><span class="type-icon">&rarr;</span>Slide Right</div>
+        <div class="type-btn" data-type="curtain"><span class="type-icon">&#9646;</span>Curtain</div>
+        <div class="type-btn" data-type="splitH"><span class="type-icon">&#9656;&#9666;</span>Split H</div>
+        <div class="type-btn" data-type="splitV"><span class="type-icon">&#9662;&#9652;</span>Split V</div>
+        <div class="type-btn" data-type="diagonal"><span class="type-icon">&#9698;</span>Diagonal</div>
+        <div class="type-btn" data-type="circle"><span class="type-icon">&#9711;</span>Circle</div>
+        <div class="type-btn" data-type="grid"><span class="type-icon">&#9638;</span>Grid</div>
+        <div class="type-btn" data-type="zoom"><span class="type-icon">&#8854;</span>Zoom</div>
+        <div class="type-btn" data-type="stack"><span class="type-icon">&#9776;</span>Stack</div>
+        <div class="type-btn" data-type="blinds"><span class="type-icon">&#9783;</span>Blinds</div>
+        <div class="type-btn" data-type="flip"><span class="type-icon">&#8635;</span>Flip</div>
+        <div class="type-btn" data-type="noise"><span class="type-icon">&#9641;</span>Noise</div>
+      </div>
+    </div>
+
+    <!-- Animation -->
+    <div class="section">
+      <div class="section-title">Animation</div>
+      <div class="field">
+        <label>Duration</label>
+        <div class="range-wrap">
+          <input type="range" id="duration" min="200" max="1600" step="50" value="600">
+          <span class="range-val" id="durationVal">600ms</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Easing</label>
+        <select id="easing">
+          <option value="cubic-bezier(0.65,0,0.35,1)">Smooth (default)</option>
+          <option value="cubic-bezier(0.76,0,0.24,1)">Power</option>
+          <option value="cubic-bezier(0.87,0,0.13,1)">Expo</option>
+          <option value="cubic-bezier(0.22,1,0.36,1)">Ease Out</option>
+          <option value="cubic-bezier(0.55,0,1,0.45)">Ease In</option>
+          <option value="ease-in-out">Ease In-Out</option>
+          <option value="linear">Linear</option>
+        </select>
+      </div>
+      <div class="field" id="staggerField">
+        <label>Stagger Delay</label>
+        <div class="range-wrap">
+          <input type="range" id="stagger" min="20" max="200" step="10" value="60">
+          <span class="range-val" id="staggerVal">60ms</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appearance -->
+    <div class="section">
+      <div class="section-title">Appearance</div>
+      <div class="field">
+        <label>Background Color</label>
+        <div class="color-wrap">
+          <input type="color" id="bgColor" value="#000000">
+          <input type="text" class="color-hex" id="bgColorHex" value="#000000">
+        </div>
+      </div>
+      <div class="field">
+        <label>Logo URL</label>
+        <input type="url" id="logoUrl" placeholder="https://example.com/logo.png">
+      </div>
+      <div class="field" id="logoSizeField">
+        <label>Logo Size</label>
+        <div class="range-wrap">
+          <input type="range" id="logoSize" min="30" max="200" step="5" value="80">
+          <span class="range-val" id="logoSizeVal">80px</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Type-specific -->
+    <div class="section" id="gridSection" style="display:none">
+      <div class="section-title">Grid Settings</div>
+      <div class="field">
+        <label>Columns</label>
+        <div class="range-wrap">
+          <input type="range" id="gridCols" min="2" max="8" step="1" value="4">
+          <span class="range-val" id="gridColsVal">4</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Rows</label>
+        <div class="range-wrap">
+          <input type="range" id="gridRows" min="2" max="8" step="1" value="4">
+          <span class="range-val" id="gridRowsVal">4</span>
+        </div>
+      </div>
+    </div>
+    <div class="section" id="barSection" style="display:none">
+      <div class="section-title">Bar / Slat Count</div>
+      <div class="field">
+        <label>Count</label>
+        <div class="range-wrap">
+          <input type="range" id="barCount" min="3" max="12" step="1" value="5">
+          <span class="range-val" id="barCountVal">5</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced -->
+    <div class="section">
+      <div class="section-title">Advanced</div>
+      <div class="field" id="clickOriginField">
+        <label>
+          <input type="checkbox" id="fromClick" checked style="margin-right:6px">
+          Circle expands from click position
+        </label>
+      </div>
+      <div class="field">
+        <label>Exclude Selector</label>
+        <input type="text" id="exclude" placeholder="[data-no-transition], .no-anim">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-area">
+    <div class="preview-frame" id="previewFrame">
+      <div class="preview-page page-a" id="pageA">
+        <h2>Page One</h2>
+        <p>Click anywhere in the preview to see the transition effect in action.</p>
+        <div class="preview-nav"><span></span><span style="background:#fff"></span><span></span></div>
+      </div>
+      <div class="preview-page page-b" id="pageB" style="opacity:0;pointer-events:none;">
+        <h2>Page Two</h2>
+        <p>The new page is revealed with your chosen transition effect.</p>
+        <div class="preview-nav"><span></span><span></span><span style="background:#fff"></span></div>
+      </div>
+      <div class="pv-overlay" id="pvOverlay"></div>
+      <span class="preview-hint" id="pvHint">Click to preview transition</span>
+    </div>
+  </div>
+
+  <!-- Code Output -->
+  <div class="code-area">
+    <div class="code-header">
+      <h3>Generated Code — Paste into Squarespace Code Injection</h3>
+      <button class="copy-btn" id="copyBtn" onclick="copyCode()">Copy Code</button>
+    </div>
+    <div class="code-block"><pre id="codeOut"></pre></div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─── State ─── */
+  var cfg = {
+    type: 'fade', duration: 600, easing: 'cubic-bezier(0.65,0,0.35,1)',
+    bgColor: '#000000', logoUrl: '', logoSize: 80,
+    gridCols: 4, gridRows: 4, barCount: 5, stagger: 60,
+    fromClick: true, exclude: ''
+  };
+
+  var pvBusy = false;
+  var currentPage = 'a';
+
+  /* ─── DOM Refs ─── */
+  var $ = function (id) { return document.getElementById(id); };
+  var typeGrid      = $('typeGrid');
+  var pvOverlay     = $('pvOverlay');
+  var pvFrame       = $('previewFrame');
+  var pvHint        = $('pvHint');
+  var pageA         = $('pageA');
+  var pageB         = $('pageB');
+  var codeOut       = $('codeOut');
+  var gridSection   = $('gridSection');
+  var barSection    = $('barSection');
+  var staggerField  = $('staggerField');
+  var clickOriginField = $('clickOriginField');
+  var logoSizeField = $('logoSizeField');
+
+  /* ─── Type Selection ─── */
+  typeGrid.addEventListener('click', function (e) {
+    var btn = e.target.closest('.type-btn');
+    if (!btn) return;
+    typeGrid.querySelector('.active').classList.remove('active');
+    btn.classList.add('active');
+    cfg.type = btn.dataset.type;
+    updateVisibility();
+    generateCode();
+  });
+
+  /* ─── Range Inputs ─── */
+  function bindRange(id, key, suffix, cb) {
+    var input = $(id);
+    var val   = $(id + 'Val');
+    input.addEventListener('input', function () {
+      cfg[key] = parseInt(input.value);
+      val.textContent = input.value + (suffix || '');
+      if (cb) cb();
+      generateCode();
+    });
+  }
+  bindRange('duration', 'duration', 'ms');
+  bindRange('stagger', 'stagger', 'ms');
+  bindRange('logoSize', 'logoSize', 'px');
+  bindRange('gridCols', 'gridCols', '');
+  bindRange('gridRows', 'gridRows', '');
+  bindRange('barCount', 'barCount', '');
+
+  /* ─── Select / Text Inputs ─── */
+  $('easing').addEventListener('change', function () { cfg.easing = this.value; generateCode(); });
+  $('bgColor').addEventListener('input', function () { cfg.bgColor = this.value; $('bgColorHex').value = this.value; generateCode(); });
+  $('bgColorHex').addEventListener('input', function () {
+    if (/^#[0-9a-f]{6}$/i.test(this.value)) { cfg.bgColor = this.value; $('bgColor').value = this.value; generateCode(); }
+  });
+  $('logoUrl').addEventListener('input', function () {
+    cfg.logoUrl = this.value.trim();
+    logoSizeField.style.display = cfg.logoUrl ? '' : 'none';
+    generateCode();
+  });
+  $('fromClick').addEventListener('change', function () { cfg.fromClick = this.checked; generateCode(); });
+  $('exclude').addEventListener('input', function () { cfg.exclude = this.value.trim(); generateCode(); });
+
+  /* ─── Conditional Visibility ─── */
+  function updateVisibility() {
+    var t = cfg.type;
+    var staggerTypes = { grid:1, stack:1, blinds:1 };
+    staggerField.style.display   = staggerTypes[t] ? '' : 'none';
+    gridSection.style.display    = t === 'grid' ? '' : 'none';
+    barSection.style.display     = (t === 'stack' || t === 'blinds') ? '' : 'none';
+    clickOriginField.style.display = t === 'circle' ? '' : 'none';
+    logoSizeField.style.display  = cfg.logoUrl ? '' : 'none';
+  }
+  updateVisibility();
+
+  /* ─── Preview Engine ─── */
+  pvFrame.addEventListener('click', function (e) {
+    if (pvBusy) return;
+    pvBusy = true;
+    pvHint.style.display = 'none';
+
+    var rect = pvFrame.getBoundingClientRect();
+    var cxPct = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    var cyPct = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+
+    runTransition(cxPct, cyPct);
+  });
+
+  function runTransition(cxPct, cyPct) {
+    pvOverlay.innerHTML = '';
+    pvOverlay.className = 'pv-overlay';
+    pvOverlay.style.setProperty('--pt-bg', cfg.bgColor);
+    pvOverlay.style.setProperty('--pt-cx', (cfg.fromClick && cfg.type === 'circle' ? cxPct : 50) + '%');
+    pvOverlay.style.setProperty('--pt-cy', (cfg.fromClick && cfg.type === 'circle' ? cyPct : 50) + '%');
+
+    buildPvDom();
+
+    if (cfg.logoUrl) {
+      var logo = document.createElement('img');
+      logo.className = 'pv-logo';
+      logo.src = cfg.logoUrl;
+      logo.style.width = cfg.logoSize + 'px';
+      logo.style.opacity = '0';
+      pvOverlay.appendChild(logo);
+    }
+
+    var dur = cfg.duration;
+    var totalCover = getTotalDur();
+
+    requestAnimationFrame(function () {
+      animateCover();
+      if (cfg.logoUrl) {
+        var logo = pvOverlay.querySelector('.pv-logo');
+        setTimeout(function () { animateEl(logo, { opacity: '1' }, dur * 0.5); }, dur * 0.3);
+      }
+    });
+
+    setTimeout(function () {
+      swapPages();
+      setTimeout(function () {
+        animateReveal();
+        if (cfg.logoUrl) {
+          var logo = pvOverlay.querySelector('.pv-logo');
+          if (logo) animateEl(logo, { opacity: '0' }, dur * 0.3);
+        }
+        setTimeout(function () {
+          pvOverlay.innerHTML = '';
+          pvBusy = false;
+          pvHint.style.display = '';
+          pvHint.textContent = 'Click to preview again';
+        }, totalCover + 50);
+      }, 300);
+    }, totalCover + 80);
+  }
+
+  function getTotalDur() {
+    var d = cfg.duration;
+    if (cfg.type === 'grid') {
+      var mr = (cfg.gridRows - 1) / 2, mc = (cfg.gridCols - 1) / 2;
+      return d + Math.round(Math.sqrt(mr*mr + mc*mc) * cfg.stagger);
+    }
+    if (cfg.type === 'stack' || cfg.type === 'blinds') return d + (cfg.barCount - 1) * cfg.stagger;
+    return d;
+  }
+
+  function swapPages() {
+    if (currentPage === 'a') {
+      pageA.style.opacity = '0'; pageA.style.pointerEvents = 'none';
+      pageB.style.opacity = '1'; pageB.style.pointerEvents = '';
+      currentPage = 'b';
+    } else {
+      pageB.style.opacity = '0'; pageB.style.pointerEvents = 'none';
+      pageA.style.opacity = '1'; pageA.style.pointerEvents = '';
+      currentPage = 'a';
+    }
+  }
+
+  function animateEl(el, to, dur, delay, ease) {
+    el.style.transition = 'none';
+    void el.offsetHeight;
+    el.style.transition = 'all ' + (dur||cfg.duration) + 'ms ' + (ease||cfg.easing);
+    if (delay) el.style.transitionDelay = delay + 'ms';
+    Object.keys(to).forEach(function (k) { el.style[k] = to[k]; });
+  }
+
+  /* ─── Build Preview DOM per Type ─── */
+  function buildPvDom() {
+    var t = cfg.type;
+    var bg = cfg.bgColor;
+
+    if (['fade','slideUp','slideDown','slideLeft','slideRight','curtain','diagonal','circle','zoom','flip','noise'].indexOf(t) !== -1) {
+      var p = document.createElement('div');
+      p.className = 'pv-panel';
+      p.style.background = bg;
+      setCoverInitial(p, t);
+      pvOverlay.appendChild(p);
+    }
+    if (t === 'splitH') {
+      ['left','right'].forEach(function (side) {
+        var h = document.createElement('div');
+        h.className = 'pv-half';
+        h.style.cssText = 'position:absolute;top:0;bottom:0;width:50%;background:' + bg + ';';
+        if (side === 'left') { h.style.left = '0'; h.style.transform = 'translateX(-100%)'; h.dataset.side = 'left'; }
+        else { h.style.right = '0'; h.style.transform = 'translateX(100%)'; h.dataset.side = 'right'; }
+        pvOverlay.appendChild(h);
+      });
+    }
+    if (t === 'splitV') {
+      ['top','bottom'].forEach(function (side) {
+        var h = document.createElement('div');
+        h.className = 'pv-half';
+        h.style.cssText = 'position:absolute;left:0;right:0;height:50%;background:' + bg + ';';
+        if (side === 'top') { h.style.top = '0'; h.style.transform = 'translateY(-100%)'; h.dataset.side = 'top'; }
+        else { h.style.bottom = '0'; h.style.transform = 'translateY(100%)'; h.dataset.side = 'bottom'; }
+        pvOverlay.appendChild(h);
+      });
+    }
+    if (t === 'grid') {
+      var g = document.createElement('div');
+      g.className = 'pv-grid';
+      g.style.cssText = 'position:absolute;inset:0;display:grid;grid-template-columns:repeat(' + cfg.gridCols + ',1fr);grid-template-rows:repeat(' + cfg.gridRows + ',1fr);';
+      var cr = (cfg.gridRows - 1) / 2, cc = (cfg.gridCols - 1) / 2;
+      for (var r = 0; r < cfg.gridRows; r++) {
+        for (var c = 0; c < cfg.gridCols; c++) {
+          var cell = document.createElement('div');
+          cell.className = 'pv-cell';
+          cell.style.cssText = 'background:' + bg + ';transform:scale(0);';
+          var dist = Math.sqrt((r-cr)*(r-cr) + (c-cc)*(c-cc));
+          cell.dataset.delay = Math.round(dist * cfg.stagger);
+          g.appendChild(cell);
+        }
+      }
+      pvOverlay.appendChild(g);
+    }
+    if (t === 'stack') {
+      for (var i = 0; i < cfg.barCount; i++) {
+        var b = document.createElement('div');
+        b.className = 'pv-bar';
+        b.style.cssText = 'position:absolute;top:0;bottom:0;background:' + bg + ';transform:translateY(100%);';
+        b.style.width = (100 / cfg.barCount + 0.5) + '%';
+        b.style.left = (100 / cfg.barCount * i) + '%';
+        b.dataset.delay = i * cfg.stagger;
+        pvOverlay.appendChild(b);
+      }
+    }
+    if (t === 'blinds') {
+      for (var i = 0; i < cfg.barCount; i++) {
+        var s = document.createElement('div');
+        s.className = 'pv-slat';
+        s.style.cssText = 'position:absolute;top:0;bottom:0;background:' + bg + ';transform:rotateY(90deg);transform-origin:left center;';
+        s.style.width = (100 / cfg.barCount + 0.5) + '%';
+        s.style.left = (100 / cfg.barCount * i) + '%';
+        s.dataset.delay = i * cfg.stagger;
+        pvOverlay.appendChild(s);
+      }
+      pvOverlay.style.perspective = '800px';
+    }
+  }
+
+  function setCoverInitial(el, t) {
+    switch (t) {
+      case 'fade':      el.style.opacity = '0'; break;
+      case 'slideUp':   el.style.transform = 'translateY(100%)'; break;
+      case 'slideDown': el.style.transform = 'translateY(-100%)'; break;
+      case 'slideLeft': el.style.transform = 'translateX(100%)'; break;
+      case 'slideRight':el.style.transform = 'translateX(-100%)'; break;
+      case 'curtain':   el.style.transform = 'scaleX(0)'; el.style.transformOrigin = 'left center'; break;
+      case 'diagonal':  el.style.clipPath = 'polygon(0 0, 0 0, -30% 100%, -30% 100%)'; break;
+      case 'circle':
+        var cx = pvOverlay.style.getPropertyValue('--pt-cx') || '50%';
+        var cy = pvOverlay.style.getPropertyValue('--pt-cy') || '50%';
+        el.style.clipPath = 'circle(0% at ' + cx + ' ' + cy + ')'; break;
+      case 'zoom':      el.style.opacity = '0'; break;
+      case 'flip':
+        el.style.transform = 'rotateY(-90deg)'; el.style.transformOrigin = 'right center';
+        pvOverlay.style.perspective = '800px'; break;
+      case 'noise':     el.style.opacity = '0'; break;
+    }
+  }
+
+  /* ─── Animate Cover ─── */
+  function animateCover() {
+    var t = cfg.type;
+    var dur = cfg.duration;
+    var ease = cfg.easing;
+
+    if (['fade','zoom','noise'].indexOf(t) !== -1) {
+      var p = pvOverlay.querySelector('.pv-panel');
+      animateEl(p, { opacity: '1' }, dur, 0, ease);
+      if (t === 'zoom') {
+        animateEl(currentPage === 'a' ? pageA : pageB, { transform: 'scale(0.92)' }, dur, 0, ease);
+      }
+    }
+    if (['slideUp','slideDown','slideLeft','slideRight'].indexOf(t) !== -1) {
+      var p = pvOverlay.querySelector('.pv-panel');
+      animateEl(p, { transform: 'translate(0)' }, dur, 0, ease);
+    }
+    if (t === 'curtain') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      animateEl(p, { transform: 'scaleX(1)' }, dur, 0, ease);
+    }
+    if (t === 'diagonal') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      animateEl(p, { clipPath: 'polygon(0 0, 130% 0, 100% 100%, -30% 100%)' }, dur, 0, ease);
+    }
+    if (t === 'circle') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      var cx = pvOverlay.style.getPropertyValue('--pt-cx') || '50%';
+      var cy = pvOverlay.style.getPropertyValue('--pt-cy') || '50%';
+      animateEl(p, { clipPath: 'circle(150% at ' + cx + ' ' + cy + ')' }, dur, 0, ease);
+    }
+    if (t === 'flip') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      animateEl(p, { transform: 'rotateY(0deg)' }, dur, 0, ease);
+    }
+    if (t === 'splitH') {
+      pvOverlay.querySelectorAll('.pv-half').forEach(function (h) {
+        animateEl(h, { transform: 'translateX(0)' }, dur, 0, ease);
+      });
+    }
+    if (t === 'splitV') {
+      pvOverlay.querySelectorAll('.pv-half').forEach(function (h) {
+        animateEl(h, { transform: 'translateY(0)' }, dur, 0, ease);
+      });
+    }
+    if (t === 'grid') {
+      pvOverlay.querySelectorAll('.pv-cell').forEach(function (c) {
+        animateEl(c, { transform: 'scale(1)' }, dur, parseInt(c.dataset.delay), ease);
+      });
+    }
+    if (t === 'stack') {
+      pvOverlay.querySelectorAll('.pv-bar').forEach(function (b) {
+        animateEl(b, { transform: 'translateY(0)' }, dur, parseInt(b.dataset.delay), ease);
+      });
+    }
+    if (t === 'blinds') {
+      pvOverlay.querySelectorAll('.pv-slat').forEach(function (s) {
+        animateEl(s, { transform: 'rotateY(0deg)' }, dur, parseInt(s.dataset.delay), ease);
+      });
+    }
+  }
+
+  /* ─── Animate Reveal ─── */
+  function animateReveal() {
+    var t = cfg.type;
+    var dur = cfg.duration;
+    var ease = cfg.easing;
+
+    if (['fade','zoom','noise'].indexOf(t) !== -1) {
+      var p = pvOverlay.querySelector('.pv-panel');
+      if (p) { p.style.transition = 'none'; p.style.opacity = '1'; void p.offsetHeight; }
+      animateEl(p, { opacity: '0' }, dur, 0, ease);
+      if (t === 'zoom') {
+        var pg = currentPage === 'a' ? pageA : pageB;
+        pg.style.transition = 'none'; pg.style.transform = 'scale(1.05)'; void pg.offsetHeight;
+        animateEl(pg, { transform: 'scale(1)' }, dur, 0, ease);
+      }
+    }
+    if (t === 'slideUp') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      p.style.transition = 'none'; p.style.transform = 'translateY(0)'; void p.offsetHeight;
+      animateEl(p, { transform: 'translateY(-100%)' }, dur, 0, ease);
+    }
+    if (t === 'slideDown') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      p.style.transition = 'none'; p.style.transform = 'translateY(0)'; void p.offsetHeight;
+      animateEl(p, { transform: 'translateY(100%)' }, dur, 0, ease);
+    }
+    if (t === 'slideLeft') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      p.style.transition = 'none'; p.style.transform = 'translateX(0)'; void p.offsetHeight;
+      animateEl(p, { transform: 'translateX(-100%)' }, dur, 0, ease);
+    }
+    if (t === 'slideRight') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      p.style.transition = 'none'; p.style.transform = 'translateX(0)'; void p.offsetHeight;
+      animateEl(p, { transform: 'translateX(100%)' }, dur, 0, ease);
+    }
+    if (t === 'curtain') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      p.style.transition = 'none'; p.style.transform = 'scaleX(1)'; p.style.transformOrigin = 'right center'; void p.offsetHeight;
+      animateEl(p, { transform: 'scaleX(0)' }, dur, 0, ease);
+    }
+    if (t === 'diagonal') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      p.style.transition = 'none'; p.style.clipPath = 'polygon(0 0, 130% 0, 100% 100%, -30% 100%)'; void p.offsetHeight;
+      animateEl(p, { clipPath: 'polygon(130% 0, 130% 0, 100% 100%, 100% 100%)' }, dur, 0, ease);
+    }
+    if (t === 'circle') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      var cx = pvOverlay.style.getPropertyValue('--pt-cx') || '50%';
+      var cy = pvOverlay.style.getPropertyValue('--pt-cy') || '50%';
+      p.style.transition = 'none'; p.style.clipPath = 'circle(150% at ' + cx + ' ' + cy + ')'; void p.offsetHeight;
+      animateEl(p, { clipPath: 'circle(0% at ' + cx + ' ' + cy + ')' }, dur, 0, ease);
+    }
+    if (t === 'flip') {
+      var p = pvOverlay.querySelector('.pv-panel');
+      p.style.transition = 'none'; p.style.transform = 'rotateY(0deg)'; p.style.transformOrigin = 'left center'; void p.offsetHeight;
+      animateEl(p, { transform: 'rotateY(90deg)' }, dur, 0, ease);
+    }
+    if (t === 'splitH') {
+      pvOverlay.querySelectorAll('.pv-half').forEach(function (h) {
+        h.style.transition = 'none'; h.style.transform = 'translateX(0)'; void h.offsetHeight;
+        var dir = h.dataset.side === 'left' ? '-100%' : '100%';
+        animateEl(h, { transform: 'translateX(' + dir + ')' }, dur, 0, ease);
+      });
+    }
+    if (t === 'splitV') {
+      pvOverlay.querySelectorAll('.pv-half').forEach(function (h) {
+        h.style.transition = 'none'; h.style.transform = 'translateY(0)'; void h.offsetHeight;
+        var dir = h.dataset.side === 'top' ? '-100%' : '100%';
+        animateEl(h, { transform: 'translateY(' + dir + ')' }, dur, 0, ease);
+      });
+    }
+    if (t === 'grid') {
+      pvOverlay.querySelectorAll('.pv-cell').forEach(function (c) {
+        c.style.transition = 'none'; c.style.transform = 'scale(1)'; void c.offsetHeight;
+        animateEl(c, { transform: 'scale(0)' }, dur, parseInt(c.dataset.delay), ease);
+      });
+    }
+    if (t === 'stack') {
+      pvOverlay.querySelectorAll('.pv-bar').forEach(function (b) {
+        b.style.transition = 'none'; b.style.transform = 'translateY(0)'; void b.offsetHeight;
+        animateEl(b, { transform: 'translateY(-100%)' }, dur, parseInt(b.dataset.delay), ease);
+      });
+    }
+    if (t === 'blinds') {
+      pvOverlay.querySelectorAll('.pv-slat').forEach(function (s) {
+        s.style.transition = 'none'; s.style.transform = 'rotateY(0deg)'; void s.offsetHeight;
+        animateEl(s, { transform: 'rotateY(-90deg)' }, dur, parseInt(s.dataset.delay), ease);
+      });
+    }
+  }
+
+  /* ─── Code Generator ─── */
+  function generateCode() {
+    var lines = [];
+    lines.push('<span class="c-cmt">&lt;!-- SDL Page Transition v1.0 --&gt;</span>');
+    lines.push('<span class="c-tag">&lt;link</span> rel="stylesheet" href="<span class="c-str">pageTransition.css</span>"<span class="c-tag">&gt;</span>');
+    lines.push('');
+    lines.push('<span class="c-tag">&lt;script&gt;</span>');
+    lines.push('window.SDL_PAGE_TRANSITION_CONFIG = {');
+
+    var props = [];
+    props.push('  <span class="c-key">type</span>:      <span class="c-str">\'' + cfg.type + '\'</span>');
+    props.push('  <span class="c-key">duration</span>:  <span class="c-num">' + cfg.duration + '</span>');
+
+    var defaultEase = 'cubic-bezier(0.65,0,0.35,1)';
+    if (cfg.easing !== defaultEase)
+      props.push('  <span class="c-key">easing</span>:    <span class="c-str">\'' + cfg.easing + '\'</span>');
+
+    if (cfg.bgColor !== '#000000')
+      props.push('  <span class="c-key">bgColor</span>:   <span class="c-str">\'' + cfg.bgColor + '\'</span>');
+
+    if (cfg.logoUrl) {
+      props.push('  <span class="c-key">logoUrl</span>:   <span class="c-str">\'' + escHtml(cfg.logoUrl) + '\'</span>');
+      if (cfg.logoSize !== 80)
+        props.push('  <span class="c-key">logoSize</span>:  <span class="c-num">' + cfg.logoSize + '</span>');
+    }
+
+    if (cfg.type === 'grid') {
+      if (cfg.gridCols !== 4) props.push('  <span class="c-key">gridCols</span>: <span class="c-num">' + cfg.gridCols + '</span>');
+      if (cfg.gridRows !== 4) props.push('  <span class="c-key">gridRows</span>: <span class="c-num">' + cfg.gridRows + '</span>');
+    }
+    if ((cfg.type === 'stack' || cfg.type === 'blinds') && cfg.barCount !== 5)
+      props.push('  <span class="c-key">barCount</span>: <span class="c-num">' + cfg.barCount + '</span>');
+
+    if (['grid','stack','blinds'].indexOf(cfg.type) !== -1 && cfg.stagger !== 60)
+      props.push('  <span class="c-key">stagger</span>:  <span class="c-num">' + cfg.stagger + '</span>');
+
+    if (cfg.type === 'circle' && !cfg.fromClick)
+      props.push('  <span class="c-key">fromClick</span>: <span class="c-num">false</span>');
+
+    if (cfg.exclude)
+      props.push('  <span class="c-key">exclude</span>:  <span class="c-str">\'' + escHtml(cfg.exclude) + '\'</span>');
+
+    lines.push(props.join(',\n'));
+
+    lines.push('};');
+    lines.push('<span class="c-tag">&lt;/script&gt;</span>');
+    lines.push('<span class="c-tag">&lt;script</span> src="<span class="c-str">pageTransition.js</span>"<span class="c-tag">&gt;&lt;/script&gt;</span>');
+
+    codeOut.innerHTML = lines.join('\n');
+  }
+
+  function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  /* ─── Copy ─── */
+  window.copyCode = function () {
+    var text = codeOut.textContent || codeOut.innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      var btn = $('copyBtn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function () { btn.textContent = 'Copy Code'; btn.classList.remove('copied'); }, 2000);
+    });
+  };
+
+  /* ─── Init ─── */
+  generateCode();
+
+})();
+</script>
+</body>
+</html>
