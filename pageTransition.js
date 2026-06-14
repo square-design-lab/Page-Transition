@@ -133,6 +133,7 @@
     sv(root, '--bars', S.barCount);
     for (var i = 0; i < S.barCount; i++) {
       var b = mk('div', PRE + 'bar', root);
+      sv(b, '--i', i);
       sv(b, '--d', (i * S.stagger) + 'ms');
     }
   };
@@ -141,6 +142,7 @@
     sv(root, '--bars', S.barCount);
     for (var i = 0; i < S.barCount; i++) {
       var sl = mk('div', PRE + 'slat', root);
+      sv(sl, '--i', i);
       sv(sl, '--d', (i * S.stagger) + 'ms');
     }
   };
