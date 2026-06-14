@@ -9,6 +9,7 @@
   inset: 0;
   z-index: 999999;
   pointer-events: none;
+  visibility: hidden;
   --pt-dur: 600ms;
   --pt-ease: cubic-bezier(0.65,0,0.35,1);
   --pt-bg: #000;
@@ -18,6 +19,7 @@
 .sdl-pt-overlay.sdl-pt-covering,
 .sdl-pt-overlay.sdl-pt-covered,
 .sdl-pt-overlay.sdl-pt-revealing {
+  visibility: visible;
   pointer-events: all;
 }
 
@@ -316,7 +318,7 @@
   top: 0; bottom: 0;
   width: calc(100% / var(--bars) + 1px);
   left: calc((100% / var(--bars)) * var(--i));
-  transform: rotateY(90deg);
+  transform: rotateY(90.1deg);
   transform-origin: left center;
   backface-visibility: hidden;
 }
@@ -339,7 +341,7 @@
   perspective: 1200px;
 }
 .sdl-pt-flip .sdl-pt-panel {
-  transform: rotateY(-90deg);
+  transform: rotateY(-90.1deg);
   transform-origin: right center;
   backface-visibility: hidden;
 }
