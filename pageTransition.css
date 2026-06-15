@@ -525,12 +525,13 @@
 .sdl-pt-pixelDissolve .sdl-pt-cell {
   position: relative;
   opacity: 0;
+  transform: none;
 }
 .sdl-pt-pixelDissolve.sdl-pt-covering .sdl-pt-cell {
   animation: ptPixelIn var(--pt-dur) var(--pt-ease) forwards;
   animation-delay: var(--d);
 }
-.sdl-pt-pixelDissolve.sdl-pt-covered .sdl-pt-cell { opacity: 1; }
+.sdl-pt-pixelDissolve.sdl-pt-covered .sdl-pt-cell { opacity: 1; transform: none; }
 .sdl-pt-pixelDissolve.sdl-pt-revealing .sdl-pt-cell {
   animation: ptPixelOut var(--pt-dur) var(--pt-ease) forwards;
   animation-delay: var(--d);
