@@ -1,6 +1,6 @@
 /* =========================================================
-   SDL Page Transition v1.0 — Styles
-   Square Design Lab — 16 GPU-accelerated transitions
+   SDL Page Transition v2.0 — Styles
+   Square Design Lab — 25 GPU-accelerated transitions
    ========================================================= */
 
 /* ─── Base Overlay ─── */
@@ -13,6 +13,7 @@
   --pt-dur: 600ms;
   --pt-ease: cubic-bezier(0.65,0,0.35,1);
   --pt-bg: #000;
+  --pt-bg2: #333;
   --pt-cx: 50%;
   --pt-cy: 50%;
 }
@@ -23,40 +24,55 @@
   pointer-events: all;
 }
 
-/* ─── Shared Panel ─── */
+/* ─── Shared Panel / Element Base ─── */
 .sdl-pt-panel,
 .sdl-pt-half,
 .sdl-pt-bar,
 .sdl-pt-slat,
-.sdl-pt-cell {
+.sdl-pt-cell,
+.sdl-pt-fold {
   position: absolute;
   background: var(--pt-bg);
   will-change: transform, opacity, clip-path;
 }
 .sdl-pt-panel { inset: 0; }
 
-/* ─── Logo ─── */
-.sdl-pt-logo {
+/* ─── Content Container (logo + texts) ─── */
+.sdl-pt-content {
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   z-index: 2;
   pointer-events: none;
+  opacity: 0;
   transition: none;
 }
-.sdl-pt-covering .sdl-pt-logo {
-  animation: ptLogoIn calc(var(--pt-dur) * 0.6) var(--pt-ease) forwards;
+.sdl-pt-covering .sdl-pt-content {
+  animation: ptContentIn calc(var(--pt-dur) * 0.6) var(--pt-ease) forwards;
   animation-delay: calc(var(--pt-dur) * 0.4);
 }
-.sdl-pt-covered .sdl-pt-logo { opacity: 1; }
-.sdl-pt-revealing .sdl-pt-logo {
-  animation: ptLogoOut calc(var(--pt-dur) * 0.4) var(--pt-ease) forwards;
+.sdl-pt-covered .sdl-pt-content { opacity: 1; }
+.sdl-pt-revealing .sdl-pt-content {
+  animation: ptContentOut calc(var(--pt-dur) * 0.4) var(--pt-ease) forwards;
 }
-@keyframes ptLogoIn  { from { opacity: 0; transform: translate(-50%,-50%) scale(0.85); }
-                         to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
-@keyframes ptLogoOut { from { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-                         to { opacity: 0; transform: translate(-50%,-50%) scale(1.08); } }
+@keyframes ptContentIn  { from { opacity: 0; transform: translate(-50%,-50%) scale(0.85); }
+                            to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes ptContentOut { from { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+                            to { opacity: 0; transform: translate(-50%,-50%) scale(1.08); } }
+
+.sdl-pt-logo {
+  display: block;
+  object-fit: contain;
+}
+
+.sdl-pt-text {
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
 
 /* =========================================================
    1. FADE
@@ -401,3 +417,250 @@
   height: 0;
   overflow: hidden;
 }
+
+/* =========================================================
+   17. SCALE FADE
+   ========================================================= */
+.sdl-pt-scaleFade .sdl-pt-panel { opacity: 0; transform: scale(1.02); }
+.sdl-pt-scaleFade.sdl-pt-covering .sdl-pt-panel {
+  animation: ptScaleFadeIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-scaleFade.sdl-pt-covered .sdl-pt-panel { opacity: 1; transform: scale(1); }
+.sdl-pt-scaleFade.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptScaleFadeOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptScaleFadeIn  { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: scale(1); } }
+@keyframes ptScaleFadeOut { from { opacity: 1; transform: scale(1); }    to { opacity: 0; transform: scale(0.98); } }
+
+/* =========================================================
+   18. BLUR
+   ========================================================= */
+.sdl-pt-blur .sdl-pt-panel { opacity: 0; backdrop-filter: blur(0px); }
+.sdl-pt-blur.sdl-pt-covering .sdl-pt-panel {
+  animation: ptBlurIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-blur.sdl-pt-covered .sdl-pt-panel { opacity: 1; backdrop-filter: blur(20px); }
+.sdl-pt-blur.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptBlurOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptBlurIn  { from { opacity: 0; backdrop-filter: blur(0px); }  to { opacity: 1; backdrop-filter: blur(20px); } }
+@keyframes ptBlurOut { from { opacity: 1; backdrop-filter: blur(20px); } to { opacity: 0; backdrop-filter: blur(0px); } }
+
+/* =========================================================
+   19. CROSS ZOOM
+   ========================================================= */
+.sdl-pt-crossZoom .sdl-pt-panel { opacity: 0; transform: scale(1.3); }
+.sdl-pt-crossZoom.sdl-pt-covering .sdl-pt-panel {
+  animation: ptCrossZoomIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-crossZoom.sdl-pt-covered .sdl-pt-panel { opacity: 1; transform: scale(1); }
+.sdl-pt-crossZoom.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptCrossZoomOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptCrossZoomIn  { from { opacity: 0; transform: scale(1.3); } to { opacity: 1; transform: scale(1); } }
+@keyframes ptCrossZoomOut { from { opacity: 1; transform: scale(1); }   to { opacity: 0; transform: scale(0.7); } }
+
+/* =========================================================
+   20. WAVE
+   ========================================================= */
+.sdl-pt-wave .sdl-pt-panel {
+  clip-path: polygon(
+    0% 0%, 0% 0%,
+    -5% 16%, -10% 33%, -5% 50%, -10% 66%, -5% 83%,
+    0% 100%, 0% 100%
+  );
+}
+.sdl-pt-wave.sdl-pt-covering .sdl-pt-panel {
+  animation: ptWaveIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-wave.sdl-pt-covered .sdl-pt-panel {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+.sdl-pt-wave.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptWaveOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptWaveIn {
+  from {
+    clip-path: polygon(
+      0% 0%, 0% 0%,
+      -5% 16%, -10% 33%, -5% 50%, -10% 66%, -5% 83%,
+      0% 100%, 0% 100%
+    );
+  }
+  to {
+    clip-path: polygon(
+      0% 0%, 100% 0%,
+      105% 16%, 110% 33%, 105% 50%, 110% 66%, 105% 83%,
+      100% 100%, 0% 100%
+    );
+  }
+}
+@keyframes ptWaveOut {
+  from {
+    clip-path: polygon(
+      0% 0%, 100% 0%,
+      105% 16%, 110% 33%, 105% 50%, 110% 66%, 105% 83%,
+      100% 100%, 0% 100%
+    );
+  }
+  to {
+    clip-path: polygon(
+      100% 0%, 100% 0%,
+      105% 16%, 110% 33%, 105% 50%, 110% 66%, 105% 83%,
+      100% 100%, 100% 100%
+    );
+  }
+}
+
+/* =========================================================
+   21. PIXEL DISSOLVE (grid variant with random delays)
+   ========================================================= */
+.sdl-pt-pixelDissolve .sdl-pt-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  grid-template-rows: repeat(var(--rows), 1fr);
+}
+.sdl-pt-pixelDissolve .sdl-pt-cell {
+  position: relative;
+  transform: scale(0);
+}
+.sdl-pt-pixelDissolve.sdl-pt-covering .sdl-pt-cell {
+  animation: ptGridIn var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+.sdl-pt-pixelDissolve.sdl-pt-covered .sdl-pt-cell { transform: scale(1); }
+.sdl-pt-pixelDissolve.sdl-pt-revealing .sdl-pt-cell {
+  animation: ptGridOut var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+
+/* =========================================================
+   22. INK SPREAD
+   ========================================================= */
+.sdl-pt-inkSpread .sdl-pt-panel {
+  clip-path: polygon(
+    var(--pt-cx) var(--pt-cy),
+    var(--pt-cx) var(--pt-cy),
+    var(--pt-cx) var(--pt-cy),
+    var(--pt-cx) var(--pt-cy),
+    var(--pt-cx) var(--pt-cy),
+    var(--pt-cx) var(--pt-cy),
+    var(--pt-cx) var(--pt-cy),
+    var(--pt-cx) var(--pt-cy)
+  );
+}
+.sdl-pt-inkSpread.sdl-pt-covering .sdl-pt-panel {
+  animation: ptInkIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-inkSpread.sdl-pt-covered .sdl-pt-panel {
+  clip-path: polygon(-20% -20%, 50% -30%, 120% -20%, 130% 50%, 120% 120%, 50% 130%, -20% 120%, -30% 50%);
+}
+.sdl-pt-inkSpread.sdl-pt-revealing .sdl-pt-panel {
+  animation: ptInkOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptInkIn {
+  from {
+    clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%);
+  }
+  to {
+    clip-path: polygon(-20% -20%, 50% -30%, 120% -20%, 130% 50%, 120% 120%, 50% 130%, -20% 120%, -30% 50%);
+  }
+}
+@keyframes ptInkOut {
+  from {
+    clip-path: polygon(-20% -20%, 50% -30%, 120% -20%, 130% 50%, 120% 120%, 50% 130%, -20% 120%, -30% 50%);
+  }
+  to {
+    clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%);
+  }
+}
+
+/* =========================================================
+   23. PAPER FOLD
+   ========================================================= */
+.sdl-pt-paperFold { perspective: 1000px; }
+.sdl-pt-paperFold .sdl-pt-fold {
+  position: absolute;
+  left: 0; right: 0;
+  height: calc(100% / var(--bars) + 1px);
+  top: calc((100% / var(--bars)) * var(--i));
+  background: var(--pt-bg);
+  transform: rotateX(-90deg);
+  transform-origin: top center;
+  backface-visibility: hidden;
+}
+.sdl-pt-paperFold.sdl-pt-covering .sdl-pt-fold {
+  animation: ptFoldIn var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+.sdl-pt-paperFold.sdl-pt-covered .sdl-pt-fold { transform: rotateX(0deg); }
+.sdl-pt-paperFold.sdl-pt-revealing .sdl-pt-fold {
+  animation: ptFoldOut var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+@keyframes ptFoldIn  { from { transform: rotateX(-90deg); } to { transform: rotateX(0deg); } }
+@keyframes ptFoldOut { from { transform: rotateX(0deg); }   to { transform: rotateX(90deg); } }
+
+/* =========================================================
+   24. STAIRCASE
+   ========================================================= */
+.sdl-pt-staircase .sdl-pt-bar {
+  top: 0; bottom: 0;
+  width: calc(100% / var(--bars) + 1px);
+  left: calc((100% / var(--bars)) * var(--i));
+  transform: scaleY(0);
+  transform-origin: top center;
+}
+.sdl-pt-staircase.sdl-pt-covering .sdl-pt-bar {
+  animation: ptStairIn var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+.sdl-pt-staircase.sdl-pt-covered .sdl-pt-bar { transform: scaleY(1); }
+.sdl-pt-staircase.sdl-pt-revealing .sdl-pt-bar {
+  transform-origin: bottom center;
+  animation: ptStairOut var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: var(--d);
+}
+@keyframes ptStairIn  { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes ptStairOut { from { transform: scaleY(1); } to { transform: scaleY(0); } }
+
+/* =========================================================
+   25. DOUBLE WIPE
+   ========================================================= */
+.sdl-pt-doubleWipe .sdl-pt-layer1 {
+  position: absolute;
+  inset: 0;
+  background: var(--pt-bg);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.sdl-pt-doubleWipe .sdl-pt-layer2 {
+  position: absolute;
+  inset: 0;
+  background: var(--pt-bg2);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.sdl-pt-doubleWipe.sdl-pt-covering .sdl-pt-layer1 {
+  animation: ptDblIn var(--pt-dur) var(--pt-ease) forwards;
+}
+.sdl-pt-doubleWipe.sdl-pt-covering .sdl-pt-layer2 {
+  animation: ptDblIn var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: calc(var(--pt-dur) * 0.2);
+}
+.sdl-pt-doubleWipe.sdl-pt-covered .sdl-pt-layer1 { transform: scaleX(1); }
+.sdl-pt-doubleWipe.sdl-pt-covered .sdl-pt-layer2 { transform: scaleX(1); background: var(--pt-bg2); }
+.sdl-pt-doubleWipe.sdl-pt-revealing .sdl-pt-layer1 {
+  transform-origin: right center;
+  animation: ptDblOut var(--pt-dur) var(--pt-ease) forwards;
+  animation-delay: calc(var(--pt-dur) * 0.2);
+}
+.sdl-pt-doubleWipe.sdl-pt-revealing .sdl-pt-layer2 {
+  transform-origin: right center;
+  background: var(--pt-bg2);
+  animation: ptDblOut var(--pt-dur) var(--pt-ease) forwards;
+}
+@keyframes ptDblIn  { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ptDblOut { from { transform: scaleX(1); } to { transform: scaleX(0); } }
