@@ -524,17 +524,19 @@
 }
 .sdl-pt-pixelDissolve .sdl-pt-cell {
   position: relative;
-  transform: scale(0);
+  opacity: 0;
 }
 .sdl-pt-pixelDissolve.sdl-pt-covering .sdl-pt-cell {
-  animation: ptGridIn var(--pt-dur) var(--pt-ease) forwards;
+  animation: ptPixelIn var(--pt-dur) var(--pt-ease) forwards;
   animation-delay: var(--d);
 }
-.sdl-pt-pixelDissolve.sdl-pt-covered .sdl-pt-cell { transform: scale(1); }
+.sdl-pt-pixelDissolve.sdl-pt-covered .sdl-pt-cell { opacity: 1; }
 .sdl-pt-pixelDissolve.sdl-pt-revealing .sdl-pt-cell {
-  animation: ptGridOut var(--pt-dur) var(--pt-ease) forwards;
+  animation: ptPixelOut var(--pt-dur) var(--pt-ease) forwards;
   animation-delay: var(--d);
 }
+@keyframes ptPixelIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ptPixelOut { from { opacity: 1; } to { opacity: 0; } }
 
 /* =========================================================
    22. INK SPREAD
